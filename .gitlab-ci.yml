@@ -24,6 +24,21 @@ variables:
 .common:
   tags: &kaniko_runner
     - shared-runner-kubernetes
+  create_release_tag_script:
+    - |
+      if [ "$CI_COMMIT_REF_NAME" = "main" ] || [ "$CI_COMMIT_REF_NAME" = "master" ]; then
+        TARGET=$TARGET_LATEST
+      fi
+      if [[ $(expr match "$CI_COMMIT_REF_NAME" ".*$STABLE_BRANCH") != 0 ]]; then
+        TARGET=$TARGET_LATEST
+      fi
+      if [ $CI_COMMIT_TAG ]; then
+        convert_tag=${CI_COMMIT_TAG//\//-}
+        distro_prefix=${ROS_DISTRO}-
+        remove_distro_tag=${convert_tag#"$distro_prefix"}
+        TARGET_RELEASE=${NAME}:${remove_distro_tag}
+        TARGET=$TARGET_RELEASE
+      fi
 
 prepare:
   stage: check_ros_distro
@@ -67,22 +82,20 @@ prepare:
       --build-arg CMAKE_ARGS
       --dockerfile "${CI_PROJECT_DIR}/${FOLDER}Dockerfile"
       --no-push
-      --destination "${PREFIX}${NAME}${SUFFIX}"
+      --destination "${TARGET}"
       --tarPath ${PREFIX//:/-}${NAME}${SUFFIX}.tar
   needs:
     - prepare
   variables:
     NAME: ${CI_JOB_NAME}_${ROS_DISTRO}
-  artifacts:
-    name: ${CI_JOB_NAME}_${ROS_DISTRO}
-    paths:
-      - ${PREFIX//:/-}${NAME}${SUFFIX}.tar
-    expire_in: 10 minutes
 
 phoenix_dependencies:
   extends:
     - .build
     - .on_allow_failure
+  before_script:
+    - TARGET=${PREFIX}${NAME}${SUFFIX}
+    - !reference [.common, create_release_tag_script]
   variables:
     NAME: phoenix_dependencies_${ROS_DISTRO}
     FOLDER: ""
@@ -90,27 +103,19 @@ phoenix_dependencies:
     matrix:
       - ROS_DISTRO:
         - $CURRENT_ROS_DISTRO
+  artifacts:
+    name: ${NAME}
+    paths:
+      - ${PREFIX//:/-}${NAME}${SUFFIX}.tar
+    expire_in: 10 minutes
 
 .publish:
   stage: publish
   tags: *kaniko_runner
   image: alpine:latest
   script:
-    - |
-      TARGET=${NAME}:${CI_COMMIT_REF_NAME//\//-}
-      if [ "$CI_COMMIT_REF_NAME" = "main" ] || [ "$CI_COMMIT_REF_NAME" = "master" ]; then
-        TARGET=$TARGET_LATEST
-      fi
-      if [[ $(expr match "$CI_COMMIT_REF_NAME" ".*$STABLE_BRANCH") != 0 ]]; then
-        TARGET=$TARGET_LATEST
-      fi
-      if [ $CI_COMMIT_TAG ]; then
-        convert_tag=${CI_COMMIT_TAG//\//-}
-        distro_prefix=${ROS_DISTRO}-
-        remove_distro_tag=${convert_tag#"$distro_prefix"}
-        TARGET_RELEASE=${NAME}:${remove_distro_tag}
-        TARGET=$TARGET_RELEASE
-      fi
+    - TARGET=${NAME}:${CI_COMMIT_REF_NAME//\//-}
+    - !reference [.common, create_release_tag_script]
     - mkdir ${ARTIFACT_PATH}
     - mv ${PREFIX//:/-}${NAME}${SUFFIX}.tar ${ARTIFACT_PATH}/${TARGET//:/-}.tar
   needs:
