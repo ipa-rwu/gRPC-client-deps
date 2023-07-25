@@ -27,6 +27,9 @@ on:
       platforms:
         required: true
         type: string
+      defult-branch:
+        required: true
+        type: string
 
 jobs:
   test_source_code_build_image:
@@ -61,7 +64,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
       - name: Build Docker
         uses: docker/build-push-action@v3
-        if: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+        if: ${{ github.ref != format('refs/heads/{0}', inputs.defult-branch) }}
         with:
           context: ${{ inputs.context-path }}
           platforms: ${{ inputs.platforms }}

@@ -20,6 +20,7 @@ jobs:
       cmake-args: ${{ steps.set-output-defaults.outputs.cmake-args }}
       platforms: ${{ steps.set-output-defaults.outputs.platforms }}
       ros-distro: ${{ steps.current-ros-distro.outputs.ros-distro }}
+      defult-branch: ${{ steps.current-ros-distro.outputs.defult-branch }}
     steps:
       - name: set outputs with default values
         id: set-output-defaults
@@ -37,6 +38,7 @@ jobs:
         run: |
           current_branch=${{ steps.branch-name.outputs.current_branch }}
           echo "ros-distro=${current_branch%\/*}" >> $GITHUB_OUTPUT
+          echo "defult-branch=${ros-distro}/devel" >> $GITHUB_OUTPUT
   grpc_libs:
     needs: [EnvSetup]
     uses: ./.github/workflows/test_code_build_image_workflow_reuse.yaml
@@ -49,3 +51,4 @@ jobs:
       build-suffix: ${{needs.EnvSetup.outputs.build-suffix}}
       cmake-args: ${{needs.EnvSetup.outputs.cmake-args}}
       platforms: ${{needs.EnvSetup.outputs.platforms}}
+      defult-branch: ${{needs.EnvSetup.outputs.defult-branch}}
