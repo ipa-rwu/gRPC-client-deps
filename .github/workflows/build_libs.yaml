@@ -39,10 +39,6 @@ jobs:
           current_branch=${{ steps.branch-name.outputs.current_branch }}
           echo "ros-distro=${current_branch%\/*}" >> $GITHUB_OUTPUT
           echo "defult-branch=${current_branch%\/*}/devel" >> $GITHUB_OUTPUT
-      - name: check default branch
-        id: check_default_branch
-        run: |
-          echo "defult-branch=${{ steps.current-ros-distro.outputs.defult-branch }}"
   grpc_libs:
     needs: [EnvSetup]
     strategy:
