@@ -19,6 +19,7 @@ jobs:
       build-suffix: ${{ steps.set-output-defaults.outputs.build-suffix }}
       cmake-args: ${{ steps.set-output-defaults.outputs.cmake-args }}
       platforms: ${{ steps.set-output-defaults.outputs.platforms }}
+      ros-distro: ${{ steps.current-ros-distro.outputs.ros-distro }}
     steps:
       - name: set outputs with default values
         id: set-output-defaults
@@ -28,13 +29,20 @@ jobs:
           echo "build-suffix=$BUILDER_SUFFIX" >> $GITHUB_OUTPUT
           echo "cmake-args=$CMAKE_ARGS" >> $GITHUB_OUTPUT
           echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
-
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v7
+      - name: Get ROS Distro
+        id: current-ros-distro
+        run: |
+          current_branch=${{ steps.branch-name.outputs.current_branch }}
+          echo "ros-distro=${current_branch%\/*}" >> $GITHUB_OUTPUT
   grpc_libs:
     needs: [EnvSetup]
     uses: ./.github/workflows/test_code_build_image_workflow_reuse.yaml
     with:
       context-path: .
-      ros-distro: noetic
+      ros-distro: ${{needs.EnvSetup.outputs.ros-distro}}
       registry: ${{needs.EnvSetup.outputs.registry}}
       image-name: ${{ github.repository_owner }}/grpc_libs
       build-prefix: ${{needs.EnvSetup.outputs.build-prefix}}
