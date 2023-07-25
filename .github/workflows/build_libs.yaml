@@ -38,7 +38,12 @@ jobs:
         run: |
           current_branch=${{ steps.branch-name.outputs.current_branch }}
           echo "ros-distro=${current_branch%\/*}" >> $GITHUB_OUTPUT
-          echo "defult-branch=${ros-distro}/devel" >> $GITHUB_OUTPUT
+          echo "defult-branch=${current_branch%\/*}/devel" >> $GITHUB_OUTPUT
+          echo "${defult-branch}"
+      - name: check default branch
+        id: check_default_branch
+        run: |
+          echo "defult-branch=${{ steps.current-ros-distro.outputs.defult-branch }}"
   grpc_libs:
     needs: [EnvSetup]
     uses: ./.github/workflows/test_code_build_image_workflow_reuse.yaml
