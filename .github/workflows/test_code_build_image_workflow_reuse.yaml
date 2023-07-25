@@ -30,7 +30,9 @@ on:
       defult-branch:
         required: true
         type: string
-
+      org:
+        required: true
+        type: string
 jobs:
   test_source_code_build_image:
     runs-on: ubuntu-latest
@@ -74,13 +76,14 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
           build-args: |
+            ORG=${{ inputs.org }}
             ROS_DISTRO=${{ inputs.ros-distro }}
             BUILDER_PREFIX=${{ inputs.build-prefix }}
             BUILDER_SUFFIX=${{ inputs.build-suffix }}
             CMAKE_ARGS=${{ inputs.cmake-args }}
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v3
-        if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+        if: ${{ github.ref == format('refs/heads/{0}', inputs.defult-branch) }}
         with:
           context: ${{ inputs.context-path }}
           platforms: ${{ inputs.platforms }}
@@ -90,6 +93,7 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
           build-args: |
+            ORG=${{ inputs.org }}
             ROS_DISTRO=${{ inputs.ros-distro }}
             BUILDER_PREFIX=${{ inputs.build-prefix }}
             BUILDER_SUFFIX=${{ inputs.build-suffix }}

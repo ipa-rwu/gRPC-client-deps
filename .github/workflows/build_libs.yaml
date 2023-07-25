@@ -33,13 +33,12 @@ jobs:
       - name: Get branch name
         id: branch-name
         uses: tj-actions/branch-names@v7
-      - name: Get ROS Distro
+      - name: Get ROS Distro and default branch
         id: current-ros-distro
         run: |
           current_branch=${{ steps.branch-name.outputs.current_branch }}
           echo "ros-distro=${current_branch%\/*}" >> $GITHUB_OUTPUT
           echo "defult-branch=${current_branch%\/*}/devel" >> $GITHUB_OUTPUT
-          echo "${defult-branch}"
       - name: check default branch
         id: check_default_branch
         run: |
@@ -55,5 +54,21 @@ jobs:
       build-prefix: ${{needs.EnvSetup.outputs.build-prefix}}
       build-suffix: ${{needs.EnvSetup.outputs.build-suffix}}
       cmake-args: ${{needs.EnvSetup.outputs.cmake-args}}
-      platforms: ${{needs.EnvSetup.outputs.platforms}}
+      platforms: linux/amd64
       defult-branch: ${{needs.EnvSetup.outputs.defult-branch}}
+      org: public.ecr.aws/docker/library/ros
+
+  grpc_libs_armv7:
+    needs: [EnvSetup]
+    uses: ./.github/workflows/test_code_build_image_workflow_reuse.yaml
+    with:
+        context-path: .
+        ros-distro: ${{needs.EnvSetup.outputs.ros-distro}}
+        registry: ${{needs.EnvSetup.outputs.registry}}
+        image-name: ${{ github.repository_owner }}/grpc_libs
+        build-prefix: ${{needs.EnvSetup.outputs.build-prefix}}
+        build-suffix: ${{needs.EnvSetup.outputs.build-suffix}}
+        cmake-args: ${{needs.EnvSetup.outputs.cmake-args}}
+        platforms: linux/arm/v7
+        defult-branch: ${{needs.EnvSetup.outputs.defult-branch}}
+        org: arm32v7/ros
