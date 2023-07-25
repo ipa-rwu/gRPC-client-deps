@@ -45,6 +45,11 @@ jobs:
           echo "defult-branch=${{ steps.current-ros-distro.outputs.defult-branch }}"
   grpc_libs:
     needs: [EnvSetup]
+    strategy:
+        matrix:
+          platform:
+            - {arch: linux/arm/v7, org: arm32v7/ros}
+            - {arch: linux/amd64, org: public.ecr.aws/docker/library/ros}
     uses: ./.github/workflows/test_code_build_image_workflow_reuse.yaml
     with:
       context-path: .
@@ -54,21 +59,6 @@ jobs:
       build-prefix: ${{needs.EnvSetup.outputs.build-prefix}}
       build-suffix: ${{needs.EnvSetup.outputs.build-suffix}}
       cmake-args: ${{needs.EnvSetup.outputs.cmake-args}}
-      platforms: linux/amd64
+      platforms: ${{ matrix.platform.arch }}
       defult-branch: ${{needs.EnvSetup.outputs.defult-branch}}
-      org: public.ecr.aws/docker/library/ros
-
-  grpc_libs_armv7:
-    needs: [EnvSetup]
-    uses: ./.github/workflows/test_code_build_image_workflow_reuse.yaml
-    with:
-        context-path: .
-        ros-distro: ${{needs.EnvSetup.outputs.ros-distro}}
-        registry: ${{needs.EnvSetup.outputs.registry}}
-        image-name: ${{ github.repository_owner }}/grpc_libs
-        build-prefix: ${{needs.EnvSetup.outputs.build-prefix}}
-        build-suffix: ${{needs.EnvSetup.outputs.build-suffix}}
-        cmake-args: ${{needs.EnvSetup.outputs.cmake-args}}
-        platforms: linux/arm/v7
-        defult-branch: ${{needs.EnvSetup.outputs.defult-branch}}
-        org: arm32v7/ros
+      org: ${{ matrix.platform.org }}
