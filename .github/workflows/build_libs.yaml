@@ -7,6 +7,7 @@ env:
   BUILDER_SUFFIX: ":latest"
   CMAKE_ARGS: "-DCMAKE_BUILD_TYPE=Release"
   REGISTRY: ghcr.io
+  PLATFORMS: linux/amd64,linux/arm/v7
 
 jobs:
   EnvSetup:
@@ -17,6 +18,7 @@ jobs:
       build-prefix: ${{ steps.set-output-defaults.outputs.build-prefix }}
       build-suffix: ${{ steps.set-output-defaults.outputs.build-suffix }}
       cmake-args: ${{ steps.set-output-defaults.outputs.cmake-args }}
+      platforms: ${{ steps.set-output-defaults.outputs.platforms }}
     steps:
       - name: set outputs with default values
         id: set-output-defaults
@@ -25,6 +27,8 @@ jobs:
           echo "build-prefix=$BUILDER_PREFIX" >> $GITHUB_OUTPUT
           echo "build-suffix=$BUILDER_SUFFIX" >> $GITHUB_OUTPUT
           echo "cmake-args=$CMAKE_ARGS" >> $GITHUB_OUTPUT
+          echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
+
   grpc_libs:
     needs: [EnvSetup]
     uses: ./.github/workflows/test_code_build_image_workflow_reuse.yaml
@@ -36,3 +40,4 @@ jobs:
       build-prefix: ${{needs.EnvSetup.outputs.build-prefix}}
       build-suffix: ${{needs.EnvSetup.outputs.build-suffix}}
       cmake-args: ${{needs.EnvSetup.outputs.cmake-args}}
+      platforms: ${{needs.EnvSetup.outputs.platforms}}
